@@ -36,7 +36,7 @@ else:
 for i in countup(1, 10):
     echo($i)
 
-proc isEmpty(sentence: string): bool {.noSideEffect.}=
+proc isEmpty(sentence: string): auto {.noSideEffect.}=
     if sentence.len == 0:
         return true
     else:
@@ -55,3 +55,10 @@ type
 
 let z = south
 echo($z)
+
+template `!>`(a,b: expr): expr {.immediate.}=
+    let a: int = b
+    echo "The result is ", $a
+
+foo !> 5
+foo2 !> 42
