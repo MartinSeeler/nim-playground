@@ -31,8 +31,22 @@ proc `$`*[T](xs: List[T]): string {.inline.} =
     res = res[2..res.len]
   "[" & res & "]"
 
-proc length*[T](xs: List[T]): int =
+proc length*[T](xs: List[T]): int {.inline.} =
   xs.foldLeft(0, (a: int, b: T) => a + 1)
+
+proc last*[T](xs: List[T]): T {.inline,noSideEffect.} =
+  if xs.tail == nil: xs.head
+  else: last(xs.tail)
+
+proc first*[T](xs: List[T]): T {.inline,noSideEffect.} = xs.head
+
+proc map*[T, U](xs: List[T], f: (T) -> U): List[U] {.inline.} =
+  proc mapRec[T, U](xs: List[T], ys: List[U], f: (T) -> U): List[U] {.inline.} =
+    if xs == nil: ys
+    else: mapRec(xs.tail, ys ::: f(xs.head), f)
+  if xs == nil: nil
+  elif xs.tail == nil: list(f(xs.head))
+  else: mapRec(xs.tail, list(f(xs.head)), f)
 
 template asList*(iter: expr): expr {.immediate.} =
   var result {.gensym.}: List[type(iter)]
@@ -53,10 +67,23 @@ let xs = list(5).cons(10).cons(42)
 echo xs
 # [42, 10, 5]
 
-let zs: List[int] = asList(1..10)
+let zs = asList(1..5)
+echo zs
+echo zs.first()
+echo zs.last()
+# [5, 4, 3, 2, 1]
+# 5
+# 1
+
 let sum: int = zs.foldLeft(0, (a, b) => a + b)
 echo sum
-echo zs
-# 55
-# [10, 9, 8, 7, 6, 5, 4, 3, 2, 1]
+# 15
+
+let prod: int = zs.foldLeft(1, (a, b) => a * b)
+echo prod
+# 120
+
+let quadBins = zs.map((x: int) => x * x).map((x: int) => toBin(x, 10))
+echo quadBins
+# [0000011001, 0000010000, 0000001001, 0000000100, 0000000001]
 
