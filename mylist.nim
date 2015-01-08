@@ -26,6 +26,9 @@ proc foldLeft*[T, U](xs: List[T], id: U, f: (U, T) -> U): U {.inline.}=
     else:
         return foldLeft(xs.tail, f(id, xs.head), f)
 
+proc `/:`*[T, U](id: U, xs: List[T]): (proc(f: (U, T) -> U)) {.inline.} = 
+  return proc(f: (U, T) -> U): U = foldLeft(xs, id, f)
+
 proc foldRight*[T, U](xs: List[T], id: U, f: (T, U) -> U): U {.inline.}=
     if xs == nil:
         return id
@@ -61,6 +64,8 @@ template asList*(iter: expr): expr {.immediate.} =
   for x in iter: result = x ::> result
   result.reverse()
 
+proc `?+?`*[T] = (x, y: T) => x + y
+
 let ns: List[int] = nil
 echo ns
 # []
@@ -68,8 +73,10 @@ echo ns
 let ys = 5 ::> 10 ::> 42
 echo ys.length()
 echo ys
+echo((0 /: ys)(?+?))
 # 3
 # [42, 10, 5]
+# 57
 
 let xs = list(5).cons(10).cons(42)
 echo xs
