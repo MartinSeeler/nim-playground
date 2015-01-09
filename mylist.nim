@@ -39,15 +39,17 @@ proc foldRight*[T, U](xs: List[T], id: U, f: (T, U) -> U): U =
 proc `:\`*[T, U](id: U, xs: List[T]): (proc(f: proc(x: T, y: U): U): U) = 
   return proc(f: proc(x: T, y: U): U): U = foldRight(xs, id, f)
 
-proc `$`*[T](xs: List[T]): string =
+proc mkString*[T](xs: List[T], left: string = "[", right: string = "]", sep: string = ", "): string =
   ### Converts list to a string.
-  var res = xs.foldLeft("", (a: string, b: T) => a & ", " & $b)
-  if res.startsWith(", "):
-    res = res[2..res.len]
-  "[" & res & "]"
+  if xs == nil:
+    left & right
+  else:
+    left & ($(xs.head) /: xs.tail)((a: string, b: T) => a & sep & $b) & right  
+
+proc `$`*[T](xs: List[T]): string = xs.mkString()
 
 proc length*[T](xs: List[T]): int =
-  xs.foldLeft(0, (a: int, b: T) => a + 1)
+  (0 /: xs)((a: int, b: T) => a + 1)
 
 proc last*[T](xs: List[T]): T {.inline,noSideEffect.} =
   if xs.tail == nil: xs.head
@@ -56,12 +58,10 @@ proc last*[T](xs: List[T]): T {.inline,noSideEffect.} =
 proc first*[T](xs: List[T]): T {.inline,noSideEffect.} = xs.head
 
 proc reverse*[T](xs: List[T]): List[T] =
-  let y: List[T] = nil
-  foldLeft(xs, y, (ys: List[T], x: T) => ys.cons(x))
+  (cast[List[T]](nil) /: xs)((ys: List[T], x: T) => x ::> ys)
 
 proc map*[T, U](xs: List[T], f: (T) -> U): List[U] =
-  let y: List[U] = nil
-  foldRight(xs, y, (x: T, ys: List[U]) => f(x) ::> ys )
+  (cast[List[U]](nil) :\ xs)((x: T, ys: List[U]) => f(x) ::> ys)
 
 template asList*(iter: expr): expr =
   var result {.gensym.}: List[type(iter)]
@@ -79,7 +79,7 @@ echo ys
 # [42, 10, 5]
 
 let sumF = proc(x, y: int): int = x + y
-echo((0 /: ys)(sumF))
+echo((0 /: (5::> 10 ::> 42))(sumF))
 # 57
 
 let xs = list(5).cons(10).cons(42)
