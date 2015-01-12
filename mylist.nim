@@ -8,8 +8,6 @@ type
         tail* : ref TList[T]
     List[T] = ref TList[T]
 
-    Predicate[T] = proc(x: T): bool
-
 proc cons*[A](xs: List[A], value: A): List[A] {.noSideEffect.} =
   List[A](head: value, tail: xs)
 
@@ -71,51 +69,58 @@ proc filter*[T](xs: List[T], p: (x:T) -> bool): List[T] =
       else: 
         return ys
   )
-  
+
+proc `!!`*[T](xs: List[T], n: int): T {.inline.} =
+  echo("!! of " & $xs & " with n=" & $n)
+  if n == 1: return xs.head
+  elif xs.tail == nil: return xs.head
+  else: return xs.tail !! (n-1)
 
 template asList*(iter: expr): expr =
   var result {.gensym.}: List[type(iter)]
   for x in iter: result = x ::> result
   result.reverse()
 
-let ns: List[int] = nil
-echo ns
-# []
 
-let ys = 5 ::> 10 ::> 42
-echo ys.length()
-echo ys
-# 3
-# [42, 10, 5]
+when isMainModule:
+  let ns: List[int] = nil
+  echo ns
+  # []
 
-let sumF = proc(x, y: int): int = x + y
-echo((0 /: (5::> 10 ::> 42))(sumF))
-# 57
+  let ys = 5 ::> 10 ::> 42
+  echo ys.length()
+  echo ys
+  # 3
+  # [42, 10, 5]
 
-let xs = list(5).cons(10).cons(42)
-echo xs
-# [42, 10, 5]
+  let sumF = proc(x, y: int): int = x + y
+  echo((0 /: (5::> 10 ::> 42))(sumF))
+  # 57
 
-let zs = asList(1..10)
-echo zs
-echo zs.first()
-echo zs.last()
-# [5, 4, 3, 2, 1]
-# 5
-# 1
+  let xs = list(5).cons(10).cons(42)
+  echo xs
+  # [42, 10, 5]
 
-let sum: int = (0:\zs)(sumF)
-echo sum
-# 15
+  let zs = asList(1..10)
+  echo zs
+  echo zs.first()
+  echo zs.last()
+  # [5, 4, 3, 2, 1]
+  # 5
+  # 1
 
-# let prod: int = zs.foldLeft(1, (a, b) => a * b)
-# echo prod
-# 120
+  let sum: int = (0:\zs)(sumF)
+  echo sum
+  # 15
 
-let quadBins = zs.map((x: int) => asList(1..x)).map((xs: List[int]) => xs.length)
-echo quadBins
-# [0000011001, 0000010000, 0000001001, 0000000100, 0000000001]
+  # let prod: int = zs.foldLeft(1, (a, b) => a * b)
+  # echo prod
+  # 120
 
-let modP: Predicate[int] = proc(x: int): bool = x mod 2 == 0
-let yy = asList(1..10).filter(modP)
-echo yy
+  let quadBins = zs.map((x: int) => asList(1..x)).map((xs: List[int]) => xs.length)
+  echo quadBins
+  # [0000011001, 0000010000, 0000001001, 0000000100, 0000000001]
+
+  let yy = asList(1..10).filter(proc(x: int): bool = x mod 2 == 0 )
+  echo yy
+  echo yy !! 6
