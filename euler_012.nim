@@ -4,13 +4,13 @@ import math, future, strutils, times, threadpool
 
 proc divs(n: int): int =
   let high = int(sqrt(float(n+1)))
-  for i in 1..high: 
+  for i in 1||high: 
     if (n mod i == 0): 
       result.inc
-      if i != int(int(n) / i): result.inc
+      if likely(i != int(int(n) / i)): result.inc
 
 proc tri(n: int): int = 
-  for i in 1..n: result.inc(i)
+  for i in 1||n: result.inc(i)
 
 type triple = tuple[n: int, tri: int, divs: int]
 
@@ -18,6 +18,13 @@ proc firstWinner(ts: seq[triple], n: int): triple =
   for t in ts:
     if t[2] >= n:
       return t
+
+var maxDiv: triple = (0,0,0)
+
+proc getMax(ts: seq[triple]): triple =
+  for t in ts:
+    if t[2] >= result[2]:
+      result = t
 
 proc getTriple(n: int): triple =
   let tri = tri(n)
@@ -30,16 +37,21 @@ proc getFirstNTriples(n: int, offset: int = 0): seq[triple] =
     res[i] = getTriple(i+offset)
   return res
 
-var responses = newSeq[FlowVar[seq[triple]]](15)
-for i in 0..14:
-  responses[i] = spawn getFirstNTriples(1000, i * 1000)
+proc searchWinner(divisors: int, round: int = 1): auto = 
+  var responses = newSeq[FlowVar[seq[triple]]](20)
+  for i in 0..19:
+    responses[i] = spawn getFirstNTriples(50, round * i * 50)
+  for r in responses:
+    let w = firstWinner(^r, divisors)
+    let max = getMax(^r)
+    if maxDiv[2] < max[2]:
+      maxDiv = max
+      echo "Max is now " & $maxDiv
+    if w != (0,0,0):
+      return w
+  return searchWinner(divisors, round + 1)
 
-for r in responses:
-  let w = firstWinner(^r, 500)
-  if w != (0,0,0):
-    echo w
-    break
-
+echo searchWinner(500, 100)
 
 
   #echo "The result for number $# is $# with $# divisors".format(n, trin, res)
