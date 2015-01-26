@@ -1,4 +1,4 @@
-import math, sequtils, strutils
+import math, sequtils, strutils, threadpool
 
 {.optimization: speed.}
 
@@ -27,22 +27,31 @@ proc factorize(n: int, given: seq[int], output: seq[int] = @[]): seq[int] =
     else: return @[]
   elif n >= 12:
     for x in given:
-      var oSeq = output & x
-      let r = factorize(n - x, given, oSeq)
-      if r.len != 0: return r
+      if x <= n:
+        var oSeq = output & x
+        let r = factorize(n - x, given, oSeq)
+        if r.len != 0: return r
     return @[]
   else: return @[]
 
 
 var abundants: seq[int] = @[]
-for x in 1..28122:
+for x in 1..28123:
   if getNumKind(x) == abundant: abundants.add(x)
 
-echo "Abundant numbers are $#" % [ $abundants ]
+var sumTotal = 0
+for x in 1..28123:
+  sumTotal.inc(x)
 
-var notSummable: seq[int] = @[]
-for i in 24..28122:
-  let factors = factorize(i, abundants)
-  if factors.len != 2: notSummable.add(i)
+var multiples: seq[int] = @[]
+var abundantsSum = 0
+for x in abundants:
+  for y in abundants:
+    let sum = x + y
+    if sum <= 28123 and not multiples.contains(sum):
+      abundantsSum.inc(sum)
+      multiples.add(sum)
 
-echo "Sum is $#" % [$notSummable.foldl(a+b)] 
+echo "Total sum is " & $sumTotal
+echo "Abundant sum is " & $abundantsSum
+echo "Result is " & $(sumTotal-abundantsSum)
